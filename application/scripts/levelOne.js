@@ -1,4 +1,4 @@
-class LevelTwo extends Phaser.Scene {
+class LevelOne extends Phaser.Scene {
 
     constructor() {
 
@@ -38,7 +38,6 @@ class LevelTwo extends Phaser.Scene {
         };
 
         
-        
     }
 
     preload() {
@@ -52,6 +51,8 @@ class LevelTwo extends Phaser.Scene {
         this.load.image('earth', 'assets/Planets/earth.png');
         this.load.image('moon', 'assets/Planets/moon.png');
         this.load.image('moon1', 'assets/Planets/moon1.png');
+        this.load.image('moon2', 'assets/Planets/moon2.png');
+        this.load.image('moon3', 'assets/Planets/moon3.png');
         this.load.image('moon6', 'assets/Planets/moon6.png');
         this.load.image('brown-planet', 'assets/Planets/brown-planet.png');
         this.load.image('purple-planet', 'assets/Planets/purple-planet.png');
@@ -74,20 +75,22 @@ class LevelTwo extends Phaser.Scene {
 
         // add background
         const space = this.add.image(0, 0, 'game-background').setScrollFactor(0);
-        space.setOrigin(0, 0);
+        space.setOrigin(0, 0); 
 
         // add planets
         this.add.image(750, 40, 'sun').setScale(.3);
         this.add.image(-250, 300, 'earth').setScale(1);
         this.add.image(950, 800, 'moon').setScale(1);
         this.add.image(-2000, -200, 'moon1').setScale(1.5);
+        this.add.image(-600, -900, 'moon2').setScale(1.5);
+        this.add.image(-300, 2000, 'moon3').setScale(1.5);
+        this.add.image(800, 1200, 'moon6').setScale(1);
         this.add.image(2000, 700, 'brown-planet').setScale(.5);
         this.add.image(1000, -800, 'purple-planet').setScale(.5);
-        this.add.image(800, 1200, 'moon6').setScale(1);
         this.stars = this.add.tileSprite(400, 300, 800, 600, 'stars').setScrollFactor(0);
 
         // add player ship and set angle
-        this.ship = this.physics.add.image(450, 300, 'ship', null).setScale(0.6);
+        this.ship = this.physics.add.image(450, 300, 'ship', null).setScale(0.5);
         this.ship.setAngle(-90);
 
         // control how quickly the ship slows down
@@ -100,14 +103,12 @@ class LevelTwo extends Phaser.Scene {
 
         // add 2 rows of enemy ships
         this.enemyRowOne = this.physics.add.group({
-            collideWorldBounds: true,
             key: 'enemy-ship',
             repeat: 5,
             setXY: {x: 320, y: 100, stepX: 75}
         });
 
          this.enemyRowTwo = this.physics.add.group({
-            collideWorldBounds: true,
             key: 'enemy-ship',
             repeat: 5,
             setXY: {x: 300, y: 50, stepX: 75}
@@ -124,6 +125,7 @@ class LevelTwo extends Phaser.Scene {
             enemy.setAngle(90);
         });
 
+    
         // create bullet group
         this.bullets = this.physics.add.group({
             classType: Bullet,
@@ -132,15 +134,15 @@ class LevelTwo extends Phaser.Scene {
         });
 
         // collision detection
-        // this.physics.add.overlap
+        this.physics.add.overlap
 
         // add score text
         this.scoreText = this.add.text(80,  30, 'Score: ' + this.score, {font: '25px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
         this.scoreText.setScrollFactor(0);
 
-         // add level completed text and set to hidden
-         this.gameWonText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2.5, 'Level One Complete!', { font: '60px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
-         this.gameWonText.setVisible(false).setScrollFactor(0);
+        // add level completed text and set to hidden
+        this.gameWonText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2.5, 'Level One Complete!', { font: '60px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
+        this.gameWonText.setVisible(false).setScrollFactor(0);
 
         // follow ship as it travels space
         this.cameras.main.startFollow(this.ship);
@@ -154,6 +156,7 @@ class LevelTwo extends Phaser.Scene {
 
         this.physics.add.collider(this.bullets, this.enemyRowOne, this.bulletEnemyCollision, null, this);
         this.physics.add.collider(this.bullets, this.enemyRowTwo, this.bulletEnemyCollision, null, this);
+
 
         // create particle emitter for an explosion to occur when an enemy ship is hit
         this.explosionEmitter = this.add.particles('explosion').createEmitter({
@@ -183,12 +186,13 @@ class LevelTwo extends Phaser.Scene {
            this.ship.setAngularVelocity(0);
         }
 
+        // apply booster 
         if (this.controls.up.isDown) {
             this.physics.velocityFromRotation(this.ship.rotation, 400, this.ship.body.acceleration);
         } else {
            this.ship.setAcceleration(0);
         }
-
+    
         // utilise bullets
         if (this.controls.space.isDown) {
             const bullet = this.bullets.get();
@@ -196,6 +200,22 @@ class LevelTwo extends Phaser.Scene {
                 bullet.fire(this.ship);
             }
         }
+
+        // update enemy ships to follow and fire at player ship
+        this.enemyRowOne.children.iterate((enemy) => {
+
+            // follow and fire at ship
+            this.targetShip(enemy);
+            
+        });
+
+        this.enemyRowTwo.children.iterate((enemy) => {
+
+            // follow and fire at ship
+            this.targetShip(enemy);
+
+           
+        });
 
         // check if all enemy ships destroyed
         if (this.score >= 'enemy-ship'.length + 2) {
@@ -220,6 +240,30 @@ class LevelTwo extends Phaser.Scene {
         this.explosionEmitter.setPosition(enemy.x, enemy.y);
         // start explosion emitter
         this.explosionEmitter.explode();
+    }
+
+    // function to handle enemy targeting ship
+    targetShip(enemy) {
+
+        // check ship still alive
+        if (this.ship && this.ship.active) {
+
+            // adjust angle for pointing at ship
+            const angleToPlayer = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.ship.x, this.ship.y);
+            enemy.rotation = angleToPlayer;
+
+            // follow enemy ship
+            this.physics.velocityFromRotation(angleToPlayer, 300, enemy.body.velocity);
+
+            // set up nemy to fire
+            if (!enemy.lastFired || this.time.now - enemy.lastFired > 2000) {
+                const enemyBullet = this.bullets.get();
+                if (enemyBullet) {
+                    enemyBullet.fire(enemy);
+                    enemy.lastFired = this.time.now; 
+                }
+            }
+        }
     }
 
 }
@@ -265,6 +309,8 @@ class Bullet extends Phaser.Physics.Arcade.Image {
 }
 
 
+
+
 // Game configuration
 const config = {
     type: Phaser.AUTO,
@@ -272,7 +318,7 @@ const config = {
     height: 600,
     parent: 'container',
     transparency: true,
-    scene: LevelTwo,
+    scene: LevelOne,
     physics: {
         default: 'arcade',
             arcade: {
