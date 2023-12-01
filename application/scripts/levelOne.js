@@ -105,13 +105,23 @@ class LevelOne extends Phaser.Scene {
         this.enemyRowOne = this.physics.add.group({
             key: 'enemy-ship',
             repeat: 5,
-            setXY: {x: 320, y: 100, stepX: 75}
+            setXY: {x: 320, y: 100, stepX: 75},
+            createCallback: (enemy) => {
+                // set a delay at the beginning of the game before enemy starts to follow abd fire at ship
+                enemy.lastFired = this.time.now - Phaser.Math.Between(0, 5000); 
+                enemy.beginfollowingShip = this.time.now + Phaser.Math.Between(0, 5000); 
+            }
         });
 
          this.enemyRowTwo = this.physics.add.group({
             key: 'enemy-ship',
             repeat: 5,
-            setXY: {x: 300, y: 50, stepX: 75}
+            setXY: {x: 300, y: 50, stepX: 75},
+            createCallback: (enemy) => {
+                // set a delay at the beginning of the game before enemy starts to follow abd fire at ship
+                enemy.lastFired = this.time.now - Phaser.Math.Between(0, 5000); 
+                enemy.beginfollowingShip = this.time.now + Phaser.Math.Between(0, 5000);
+            }
         });
 
         // set enemy ship size and angle
@@ -125,7 +135,7 @@ class LevelOne extends Phaser.Scene {
             enemy.setAngle(90);
         });
 
-    
+
         // create bullet group
         this.bullets = this.physics.add.group({
             classType: Bullet,
@@ -189,8 +199,10 @@ class LevelOne extends Phaser.Scene {
         // apply booster 
         if (this.controls.up.isDown) {
             this.physics.velocityFromRotation(this.ship.rotation, 400, this.ship.body.acceleration);
+            this.boosterEmitter.start();
         } else {
            this.ship.setAcceleration(0);
+           this.boosterEmitter.stop();
         }
     
         // utilise bullets
@@ -248,19 +260,22 @@ class LevelOne extends Phaser.Scene {
         // check ship still alive
         if (this.ship && this.ship.active) {
 
-            // adjust angle for pointing at ship
-            const angleToPlayer = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.ship.x, this.ship.y);
-            enemy.rotation = angleToPlayer;
+            if (this.time.now >= enemy.beginfollowingShip) {
 
-            // follow enemy ship
-            this.physics.velocityFromRotation(angleToPlayer, 300, enemy.body.velocity);
+                // adjust angle for pointing at ship
+                const angleToPlayer = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.ship.x, this.ship.y);
+                enemy.rotation = angleToPlayer;
+            
+                // follow enemy ship
+                this.physics.velocityFromRotation(angleToPlayer, 300, enemy.body.velocity);
 
-            // set up nemy to fire
-            if (!enemy.lastFired || this.time.now - enemy.lastFired > 2000) {
-                const enemyBullet = this.bullets.get();
-                if (enemyBullet) {
-                    enemyBullet.fire(enemy);
-                    enemy.lastFired = this.time.now; 
+                // set up enemy to fire
+                if (!enemy.lastFired || this.time.now - enemy.lastFired > 5000) {
+                    const enemyBullet = this.bullets.get();
+                    if (enemyBullet) {
+                        enemyBullet.fire(enemy);
+                        enemy.lastFired = this.time.now; 
+                    }
                 }
             }
         }
@@ -268,17 +283,16 @@ class LevelOne extends Phaser.Scene {
 
 }
 
+// ship bullet class
 class Bullet extends Phaser.Physics.Arcade.Image {
 
     constructor(scene, x, y) {
 
         super(scene, x, y, 'bullet');
-
         this.setBlendMode(1);
         this.setDepth(1);
-
-        this.speed = 800;
-        this.lifespan = 100;
+        this.speed = 600;
+        this.lifespan = 80;
 
     }
 
@@ -289,7 +303,6 @@ class Bullet extends Phaser.Physics.Arcade.Image {
         this.setAngle(ship.body.rotation);
         this.setPosition(ship.x, ship.y);
         this.body.reset(ship.x, ship.y);
-
         this.scene.physics.velocityFromRotation(ship.rotation, this.speed, this.body.velocity);
         
     }
@@ -298,8 +311,7 @@ class Bullet extends Phaser.Physics.Arcade.Image {
 
         this.lifespan -= delta;
 
-        if (this.lifespan <= 0)
-        {
+        if (this.lifespan <= 0) {
             this.setActive(false);
             this.setVisible(false);
             this.body.stop();
