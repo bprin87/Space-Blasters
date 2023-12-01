@@ -132,7 +132,7 @@ class LevelTwo extends Phaser.Scene {
         });
 
         // collision detection
-        this.physics.add.overlap
+        // this.physics.add.overlap
 
         // add score text
         this.scoreText = this.add.text(80,  30, 'Score: ' + this.score, {font: '25px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
@@ -148,12 +148,23 @@ class LevelTwo extends Phaser.Scene {
         // controls
         this.controls = this.input.keyboard.createCursorKeys();
 
-        // set collision detection between ship and enemy ships and bullet and enemy ships
+        // set collision detection between ships and bullets
         this.physics.add.collider(this.ship, this.enemyRowOne, this.shipEnemyCollision);
         this.physics.add.collider(this.ship, this.enemyRowTwo, this.shipEnemyCollision);
 
         this.physics.add.collider(this.bullets, this.enemyRowOne, this.bulletEnemyCollision, null, this);
         this.physics.add.collider(this.bullets, this.enemyRowTwo, this.bulletEnemyCollision, null, this);
+
+        // create particle emitter for an explosion to occur when an enemy ship is hit
+        this.explosionEmitter = this.add.particles('explosion').createEmitter({
+            x: 0,
+            y: 0,
+            speed: { min: -50, max: 50 },
+            scale: { start: 0.5, end: 0 },
+            lifespan: 600,
+            blendMode: 'ADD',
+            on: false 
+        });
          
     }
 
@@ -204,6 +215,11 @@ class LevelTwo extends Phaser.Scene {
         enemy.destroy();
         this.score +=1;
         this.scoreText.setText('Score: ' + this.score);
+
+        // set position of explosion emitter to that of enemey ship's
+        this.explosionEmitter.setPosition(enemy.x, enemy.y);
+        // start explosion emitter
+        this.explosionEmitter.explode();
     }
 
 }
