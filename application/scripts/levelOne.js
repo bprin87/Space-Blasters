@@ -12,6 +12,7 @@ class LevelOne extends Phaser.Scene {
         this.controls;
         this.score = 0;
         this.protectionLevel;
+        this.isPaused = false;
 
         // booster particle config
         this.particleConfig = {
@@ -67,7 +68,7 @@ class LevelOne extends Phaser.Scene {
         this.load.image('bullet', 'assets/Player/bullet.png');
         this.load.image('enemy-bullet', 'assets/Enemy/enemy-bullet.png');
         this.load.image('explosion', 'assets/FX/flash.png');
-        this.load.image('shield', 'assets/Player/')
+        this.load.image('circle', 'assets/Player/circle.png')
 
     }
 
@@ -108,9 +109,9 @@ class LevelOne extends Phaser.Scene {
             setXY: {x: 320, y: 100, stepX: 75},
             createCallback: (enemy) => {
                 // set a delay at the beginning of the game before enemy starts to follow abd fire at ship
-                enemy.lastFired = this.time.now - Phaser.Math.Between(0, 5000); 
+                enemy.lastFired = this.time.now - Phaser.Math.Between(5000, 7000); 
                 enemy.beginfollowingShip = this.time.now + Phaser.Math.Between(0, 5000); 
-            }
+            },
         });
 
          this.enemyRowTwo = this.physics.add.group({
@@ -119,10 +120,11 @@ class LevelOne extends Phaser.Scene {
             setXY: {x: 300, y: 50, stepX: 75},
             createCallback: (enemy) => {
                 // set a delay at the beginning of the game before enemy starts to follow abd fire at ship
-                enemy.lastFired = this.time.now - Phaser.Math.Between(0, 5000); 
-                enemy.beginfollowingShip = this.time.now + Phaser.Math.Between(0, 5000);
-            }
+                enemy.lastFired = this.time.now - Phaser.Math.Between(5000, 7000); 
+                enemy.beginfollowingShip = this.time.now + Phaser.Math.Between(5000, 7000);
+            },
         });
+
 
         // set enemy ship size and angle
         this.enemyRowOne.children.iterate((enemy) => {
@@ -135,6 +137,12 @@ class LevelOne extends Phaser.Scene {
             enemy.setAngle(90);
         });
 
+         // create enemy bullet group
+         this.enemyBullets = this.physics.add.group({
+            classType: EnemyBullet,
+            maxSize: -1,
+            runChildUpdate: true
+        });
 
         // create bullet group
         this.bullets = this.physics.add.group({
@@ -143,12 +151,14 @@ class LevelOne extends Phaser.Scene {
             runChildUpdate: true
         });
 
-        // collision detection
-        this.physics.add.overlap
 
         // add score text
         this.scoreText = this.add.text(80,  30, 'Score: ' + this.score, {font: '25px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
         this.scoreText.setScrollFactor(0);
+
+        // add protection level
+        this.protectionLevelText = this.add.text(150,  560, 'Protection Level',{font: '25px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
+        this.protectionLevelText.setScrollFactor(0);
 
         // add level completed text and set to hidden
         this.gameWonText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2.5, 'Level One Complete!', { font: '60px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
@@ -164,9 +174,10 @@ class LevelOne extends Phaser.Scene {
         this.physics.add.collider(this.ship, this.enemyRowOne, this.shipEnemyCollision);
         this.physics.add.collider(this.ship, this.enemyRowTwo, this.shipEnemyCollision);
 
-        this.physics.add.collider(this.bullets, this.enemyRowOne, this.bulletEnemyCollision, null, this);
-        this.physics.add.collider(this.bullets, this.enemyRowTwo, this.bulletEnemyCollision, null, this);
+        this.physics.add.overlap(this.bullets, this.enemyRowOne, this.bulletEnemyCollision, null, this);
+        this.physics.add.overlap(this.bullets, this.enemyRowTwo, this.bulletEnemyCollision, null, this);
 
+        this.physics.add.overlap(this.enemyBullets, this.ship, this.enemyBulletShipCollision, null, this);
 
         // create particle emitter for an explosion to occur when an enemy ship is hit
         this.explosionEmitter = this.add.particles('explosion').createEmitter({
@@ -178,7 +189,19 @@ class LevelOne extends Phaser.Scene {
             blendMode: 'ADD',
             on: false 
         });
-         
+
+        // create particle emitter for a shield to display when ship is hit by enemy bullet
+        this.shieldEmitter = this.add.particles('circle').createEmitter({
+            x: 0,
+            y: 0,
+            speed: { min: -50, max: 50 },
+            scale: { start: 0.4, end: 0 },
+            lifespan: 300,
+            blendMode: 'ADD',
+            on: false 
+        });
+
+
     }
 
     update() {
@@ -213,6 +236,7 @@ class LevelOne extends Phaser.Scene {
             }
         }
 
+    
         // update enemy ships to follow and fire at player ship
         this.enemyRowOne.children.iterate((enemy) => {
 
@@ -239,12 +263,24 @@ class LevelOne extends Phaser.Scene {
             // });
             
         }
+
+    
+    }
+
+    enemyBulletShipCollision(ship, enemyBullet) {
+        enemyBullet.destroy();
+        this.shieldEmitter.setPosition(ship.x, ship.y);
+        this.shieldEmitter.explode();
+    
+        
     }
 
     // function to handle collisions and score update
     bulletEnemyCollision(bullet, enemy) {
+       
         bullet.destroy();
         enemy.destroy();
+        
         this.score +=1;
         this.scoreText.setText('Score: ' + this.score);
 
@@ -256,7 +292,7 @@ class LevelOne extends Phaser.Scene {
 
     // function to handle enemy targeting ship
     targetShip(enemy) {
-
+    
         // check ship still alive
         if (this.ship && this.ship.active) {
 
@@ -267,18 +303,20 @@ class LevelOne extends Phaser.Scene {
                 enemy.rotation = angleToPlayer;
             
                 // follow enemy ship
-                this.physics.velocityFromRotation(angleToPlayer, 300, enemy.body.velocity);
+                this.physics.velocityFromRotation(angleToPlayer, 400, enemy.body.velocity);
 
                 // set up enemy to fire
-                if (!enemy.lastFired || this.time.now - enemy.lastFired > 5000) {
-                    const enemyBullet = this.bullets.get();
+                if (!enemy.lastFired || this.time.now - enemy.lastFired > 1000) {
+                    const enemyBullet = this.enemyBullets.get();
                     if (enemyBullet) {
                         enemyBullet.fire(enemy);
-                        enemy.lastFired = this.time.now; 
+                        enemy.lastFired = this.time.now;
+                        
                     }
                 }
             }
         }
+        
     }
 
 }
@@ -291,8 +329,8 @@ class Bullet extends Phaser.Physics.Arcade.Image {
         super(scene, x, y, 'bullet');
         this.setBlendMode(1);
         this.setDepth(1);
-        this.speed = 600;
-        this.lifespan = 80;
+        this.speed = 500;
+        this.lifespan = 100;
 
     }
 
@@ -320,6 +358,42 @@ class Bullet extends Phaser.Physics.Arcade.Image {
 
 }
 
+// enemy bullet class
+class EnemyBullet extends Phaser.Physics.Arcade.Image {
+
+    constructor(scene, x, y) {
+
+        super(scene, x, y, 'enemy-bullet');
+        this.setBlendMode(1);
+        this.setDepth(1);
+        this.speed = 600;
+        this.lifespan = 80;
+
+    }
+
+    fire(enemyShip) {
+
+        this.setActive(true);
+        this.setVisible(true);
+        this.setAngle(enemyShip.body.rotation);
+        this.setPosition(enemyShip.x, enemyShip.y);
+        this.body.reset(enemyShip.x, enemyShip.y);
+        this.scene.physics.velocityFromRotation(enemyShip.rotation, this.speed, this.body.velocity);
+        
+    }
+
+    preupdate(time, delta) {
+
+        this.lifespan -= delta;
+
+        if (this.lifespan <= 0) {
+            this.setActive(false);
+            this.setVisible(false);
+            this.body.stop();
+        }
+    }
+
+}
 
 
 
@@ -340,3 +414,12 @@ const config = {
 };
 
 const game = new Phaser.Game(config); 
+
+// pause/resume game -  must be done from outside of class as pausing inside class disables evertything
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'p') {
+        game.scene.pause('levelOne');
+    } else if (event.key === 'r') {
+        game.scene.resume('levelOne');
+    }
+});
