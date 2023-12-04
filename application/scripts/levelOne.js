@@ -1,3 +1,7 @@
+// global varibale for when game is paused outside of the class
+let gamePausedText;
+
+// phaser class for level one scene
 class LevelOne extends Phaser.Scene {
 
     constructor() {
@@ -11,8 +15,13 @@ class LevelOne extends Phaser.Scene {
         this.enemyBullet;
         this.controls;
         this.score = 0;
-        this.protectionLevel;
+        this.protectionLevel = 10;
         this.isPaused = false;
+        this.greenSquare = [];
+        this.yellowSquare = [];
+        this.redSquare = [];
+        this.gameOver = false;
+        this.escape;
 
         // booster particle config
         this.particleConfig = {
@@ -37,9 +46,10 @@ class LevelOne extends Phaser.Scene {
             scale: { start: 0.5, end: 0 },
             blendMode: 'ADD'
         };
-
+        
         
     }
+
 
     preload() {
 
@@ -64,11 +74,14 @@ class LevelOne extends Phaser.Scene {
 
         // load objects/FX
         this.load.image('booster', 'assets/Player/booster.png');
-        this.load.image('enemy-booster', 'assets/Enemy/booster.png');
+        this.load.image('enemy-booster', 'assets/Enemy/enemy-booster.png');
         this.load.image('bullet', 'assets/Player/bullet.png');
         this.load.image('enemy-bullet', 'assets/Enemy/enemy-bullet.png');
         this.load.image('explosion', 'assets/FX/flash.png');
         this.load.image('circle', 'assets/Player/circle.png')
+        this.load.image('red', 'assets/FX/squareRed.png');
+        this.load.image('yellow', 'assets/FX/squareYellow.png');
+        this.load.image('green', 'assets/FX/squareGreen.png');
 
     }
 
@@ -90,6 +103,19 @@ class LevelOne extends Phaser.Scene {
         this.add.image(1000, -800, 'purple-planet').setScale(.5);
         this.stars = this.add.tileSprite(400, 300, 800, 600, 'stars').setScrollFactor(0);
 
+       // add protection level indicators
+        for (let i = 0; i < 4; i++) {
+         this.redSquare[i] = this.add.image(30 + i * 25, 560, 'red').setScrollFactor(0);
+        }
+
+        for (let i = 0; i < 4; i++) {
+            this.yellowSquare[i] = this.add.image(130 + i * 25, 560, 'yellow').setScrollFactor(0);
+        }
+
+        for (let i = 0; i < 4; i++) {
+            this.greenSquare[i] = this.add.image(233 + i * 25, 560, 'green').setScrollFactor(0);
+        }
+
         // add player ship and set angle
         this.ship = this.physics.add.image(450, 300, 'ship', null).setScale(0.5);
         this.ship.setAngle(-90);
@@ -108,9 +134,9 @@ class LevelOne extends Phaser.Scene {
             repeat: 5,
             setXY: {x: 320, y: 100, stepX: 75},
             createCallback: (enemy) => {
-                // set a delay at the beginning of the game before enemy starts to follow abd fire at ship
+                // set a delay at the beginning of the game before enemy starts to follow nbd fire at ship
                 enemy.lastFired = this.time.now - Phaser.Math.Between(5000, 7000); 
-                enemy.beginfollowingShip = this.time.now + Phaser.Math.Between(0, 5000); 
+                enemy.beginfollowingShip = this.time.now + Phaser.Math.Between(5000, 7000); 
             },
         });
 
@@ -119,12 +145,11 @@ class LevelOne extends Phaser.Scene {
             repeat: 5,
             setXY: {x: 300, y: 50, stepX: 75},
             createCallback: (enemy) => {
-                // set a delay at the beginning of the game before enemy starts to follow abd fire at ship
+                // set a delay at the beginning of the game before enemy starts to follow and fire at ship
                 enemy.lastFired = this.time.now - Phaser.Math.Between(5000, 7000); 
                 enemy.beginfollowingShip = this.time.now + Phaser.Math.Between(5000, 7000);
             },
         });
-
 
         // set enemy ship size and angle
         this.enemyRowOne.children.iterate((enemy) => {
@@ -151,32 +176,34 @@ class LevelOne extends Phaser.Scene {
             runChildUpdate: true
         });
 
-
         // add score text
         this.scoreText = this.add.text(80,  30, 'Score: ' + this.score, {font: '25px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
         this.scoreText.setScrollFactor(0);
 
-        // add protection level
-        this.protectionLevelText = this.add.text(150,  560, 'Protection Level',{font: '25px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
-        this.protectionLevelText.setScrollFactor(0);
-
         // add level completed text and set to hidden
         this.gameWonText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2.5, 'Level One Complete!', { font: '60px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
         this.gameWonText.setVisible(false).setScrollFactor(0);
+
+        // // add paused text
+        gamePausedText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2, 'Game Paused', { font: '50px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
+        gamePausedText.setVisible(false).setScrollFactor(0);
+
+         //add game over text
+        this.gameOverText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2.5, 'Game Over!', { font: '60px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
+        this.gameOverText.setVisible(false).setScrollFactor(0);
 
         // follow ship as it travels space
         this.cameras.main.startFollow(this.ship);
 
         // controls
         this.controls = this.input.keyboard.createCursorKeys();
+        this.escape = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
 
         // set collision detection between ships and bullets
         this.physics.add.collider(this.ship, this.enemyRowOne, this.shipEnemyCollision);
         this.physics.add.collider(this.ship, this.enemyRowTwo, this.shipEnemyCollision);
-
         this.physics.add.overlap(this.bullets, this.enemyRowOne, this.bulletEnemyCollision, null, this);
         this.physics.add.overlap(this.bullets, this.enemyRowTwo, this.bulletEnemyCollision, null, this);
-
         this.physics.add.overlap(this.enemyBullets, this.ship, this.enemyBulletShipCollision, null, this);
 
         // create particle emitter for an explosion to occur when an enemy ship is hit
@@ -201,14 +228,9 @@ class LevelOne extends Phaser.Scene {
             on: false 
         });
 
-
     }
 
     update() {
-
-        // use the stars to make it look like the ship is moving fast
-        this.stars.tilePositionX += this.ship.body.deltaX() * 2;
-        this.stars.tilePositionY += this.ship.body.deltaY() * 2;
 
         // apply the control keys
         if (this.controls.left.isDown) {
@@ -234,19 +256,21 @@ class LevelOne extends Phaser.Scene {
             if (bullet) {
                 bullet.fire(this.ship);
             }
+        } 
+
+        // return to main menu
+        if (this.escape.isDown) {
+            this.scene.start('mainMenu');
         }
 
-    
         // update enemy ships to follow and fire at player ship
         this.enemyRowOne.children.iterate((enemy) => {
-
             // follow and fire at ship
             this.targetShip(enemy);
             
         });
 
         this.enemyRowTwo.children.iterate((enemy) => {
-
             // follow and fire at ship
             this.targetShip(enemy);
 
@@ -258,29 +282,78 @@ class LevelOne extends Phaser.Scene {
             // display game won text
             this.gameWonText.setVisible(true);
             // move on to next level after a delay of 5 seconds
-            // this.time.delayedCall(5000, () => {
-            //     this.scene.start('levelTwo');
-            // });
+            this.time.delayedCall(5000, () => {
+                this.scene.start('levelTwo');
+            });
             
         }
 
-    
+        this.updateProtectionlevel();
+
+         // use the stars to make it look like the ship is moving fast
+        this.stars.tilePositionX += this.ship.body.deltaX() * 2;
+        this.stars.tilePositionY += this.ship.body.deltaY() * 2;
+
     }
 
+    updateProtectionlevel() {
+        
+        // hide all squares to begin with
+        this.redSquare.forEach(square => square.setVisible(false)); 
+        this.yellowSquare.forEach(square => square.setVisible(false));
+        this.greenSquare.forEach(square => square.setVisible(false));
+        
+        // display squares based on protection level
+        for (let i = 0; i < 4 && i < this.protectionLevel - 6; i++) {
+            this.greenSquare[i].setVisible(true);
+        }
+        for (let i = 0; i < 4 && i < this.protectionLevel - 3; i++) {
+            this.yellowSquare[i].setVisible(true);
+        }
+
+        for (let i = 0; i < 4 && i < this.protectionLevel; i++) {
+            this.redSquare[i].setVisible(true);
+        }
+
+    }
+
+    // function to handle collision between ship and enemy bullets
     enemyBulletShipCollision(ship, enemyBullet) {
+
         enemyBullet.destroy();
         this.shieldEmitter.setPosition(ship.x, ship.y);
         this.shieldEmitter.explode();
-    
+
+        // reduce squares each time ship is hit by enemy bullet
+        if (this.protectionLevel > 0) {
+            this.protectionLevel--;
+            this.updateProtectionlevel();
+
+            // player loses if protection level is 0
+        } else if (this.protectionLevel === 0) {
+            this.ship.setActive(false);
+            this.ship.setVisible(false);
+            this.explosionEmitter.setPosition(ship.x, ship.y);
+            this.explosionEmitter.explode();
+
+            // display game over text
+            this.gameOverText.setVisible(true);
+        
+            // go to main menu
+            this.time.delayedCall(3000, () => {
+                this.scene.start('mainMenu'); 
+            })
+        }
         
     }
 
-    // function to handle collisions and score update
+    // function to handle collision between enemy ship and bullet as well as update score
     bulletEnemyCollision(bullet, enemy) {
        
         bullet.destroy();
         enemy.destroy();
         
+        // update score and amend text
         this.score +=1;
         this.scoreText.setText('Score: ' + this.score);
 
@@ -295,7 +368,7 @@ class LevelOne extends Phaser.Scene {
     
         // check ship still alive
         if (this.ship && this.ship.active) {
-
+            // set enemy ships to follow player ship
             if (this.time.now >= enemy.beginfollowingShip) {
 
                 // adjust angle for pointing at ship
@@ -315,8 +388,7 @@ class LevelOne extends Phaser.Scene {
                     }
                 }
             }
-        }
-        
+        } 
     }
 
 }
@@ -395,6 +467,17 @@ class EnemyBullet extends Phaser.Physics.Arcade.Image {
 
 }
 
+// pause/resume game
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'p') {
+        game.scene.pause('levelOne');
+        // add paused text
+        gamePausedText.setVisible(true);
+    } else if (event.key === 'r') {
+        game.scene.resume('levelOne');
+        gamePausedText.setVisible(false);
+    }
+});
 
 
 // Game configuration
@@ -415,11 +498,3 @@ const config = {
 
 const game = new Phaser.Game(config); 
 
-// pause/resume game -  must be done from outside of class as pausing inside class disables evertything
-document.addEventListener('keydown', (event) => {
-    if (event.key === 'p') {
-        game.scene.pause('levelOne');
-    } else if (event.key === 'r') {
-        game.scene.resume('levelOne');
-    }
-});
