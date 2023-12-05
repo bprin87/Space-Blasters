@@ -2,9 +2,9 @@ class GameRules extends Phaser.Scene {
 
     constructor() {
 
-        super({key: 'gameRules'});
+        super({key: 'GameRules'});
 
-        // Class Variables
+        
         
     }
 
@@ -28,17 +28,24 @@ class GameRules extends Phaser.Scene {
         const screenCenterY = this.cameras.main.worldView.y + this.cameras.main.height / 2; // centre text
 
         // Return to Main Menu
-        this.add.text(screenCenterX - 350, screenCenterY - 270, 'Back', {font: '25px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
+        const returnText = this.add.text(screenCenterX - 350, screenCenterY - 270, 'Back', {font: '25px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
+
+        returnText.setInteractive({useHandCursor: true});
+        returnText.on('pointerdown', () => {
+            this.scene.start('MainMenu');
+        });
 
         // Title
         this.add.text(screenCenterX + 10, screenCenterY - 180, 'Game Rules', {font: '50px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
 
         // Rules
         this.add.text(screenCenterX, screenCenterY - 80, '1. Use the four arrow keys to move the ship, and the space bar to shoot', {font: '18px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
-        this.add.text(screenCenterX, screenCenterY - 45, '2. You must destroy all enemy ships to win the game', {font: '18px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
-        this.add.text(screenCenterX, screenCenterY - 10, '3. Each enemy ship you destroy will earn you one point', {font: '18px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
-        this.add.text(screenCenterX, screenCenterY + 25, '4. Each time you are hit by the enemy you will lose one level of protection', {font: '18px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
-        this.add.text(screenCenterX, screenCenterY + 60, '5. If you lose all your protection then you lose the game', {font: '18px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
+        this.add.text(screenCenterX, screenCenterY - 45, '2. To pause the game, press the P key on the keyboard and R to resume', {font: '18px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
+        this.add.text(screenCenterX, screenCenterY - 10, '3. If you wish to exit the game, press the E key on the keyboard', {font: '18px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
+        this.add.text(screenCenterX, screenCenterY + 20, '4. You must destroy all enemy ships to win the game', {font: '18px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
+        this.add.text(screenCenterX, screenCenterY + 55, '5. Each enemy ship you destroy will earn you one point', {font: '18px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
+        this.add.text(screenCenterX, screenCenterY + 90, '6. Each time you are hit by the enemy you will lose one level of protection', {font: '18px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
+        this.add.text(screenCenterX, screenCenterY + 125, '7. If you lose all your protection then you lose the game', {font: '18px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
         
     }
 
@@ -56,7 +63,7 @@ const config = {
     height: 600,
     parent: 'container',
     transparency: true,
-    scene: [GameRules],
+    scene: GameRules,
     physics: {
         default: 'arcade',
             arcade: {
@@ -66,3 +73,6 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
+
+
+
