@@ -6,7 +6,7 @@ class LevelOne extends Phaser.Scene {
 
     constructor() {
 
-        super({key: 'levelOne'});
+        super({key: 'LevelOne'});
 
         // add variables
         this.ship;
@@ -25,24 +25,29 @@ class LevelOne extends Phaser.Scene {
 
         // booster particle config
         this.particleConfig = {
+            // set the initial speed of the particles
             speed: 100,
+            // configure lifespan of each particle
             lifespan: {
                 onEmit: (particle, key, t, value) => {
                     return Phaser.Math.Percent(this.ship.body.speed, 0, 300) * 2000;
                 }
             },
+            // set transparency of each particle
             alpha: {
                 onEmit: (particle, key, t, value) =>
                 {
                     return Phaser.Math.Percent(this.ship.body.speed, 0, 300);
                 }
             },
+            // setinitial angle of each particle when emitted
             angle: {
                 onEmit: (particle, key, t, value) =>
                 {
                     return (this.ship.angle - 180) + Phaser.Math.Between(-10, 10);
                 }
             },
+            // set initial and final scale of each particle
             scale: { start: 0.5, end: 0 },
             blendMode: 'ADD'
         };
@@ -180,6 +185,10 @@ class LevelOne extends Phaser.Scene {
         this.scoreText = this.add.text(80,  30, 'Score: ' + this.score, {font: '25px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
         this.scoreText.setScrollFactor(0);
 
+        // add level text
+        this.levelText = this.add.text(730,  30, 'Level 1', {font: '25px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
+        this.levelText.setScrollFactor(0);
+
         // add level completed text and set to hidden
         this.gameWonText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2.5, 'Level One Complete!', { font: '60px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
         this.gameWonText.setVisible(false).setScrollFactor(0);
@@ -260,7 +269,7 @@ class LevelOne extends Phaser.Scene {
 
         // return to main menu
         if (this.escape.isDown) {
-            this.scene.start('mainMenu');
+            this.scene.start('MainMenu');
         }
 
         // update enemy ships to follow and fire at player ship
@@ -341,7 +350,7 @@ class LevelOne extends Phaser.Scene {
         
             // go to main menu
             this.time.delayedCall(3000, () => {
-                this.scene.start('mainMenu'); 
+                this.scene.start('MainMenu'); 
             })
         }
         
@@ -470,11 +479,11 @@ class EnemyBullet extends Phaser.Physics.Arcade.Image {
 // pause/resume game
 document.addEventListener('keydown', (event) => {
     if (event.key === 'p') {
-        game.scene.pause('levelOne');
+        game.scene.pause('LevelOne');
         // add paused text
         gamePausedText.setVisible(true);
     } else if (event.key === 'r') {
-        game.scene.resume('levelOne');
+        game.scene.resume('LevelOne');
         gamePausedText.setVisible(false);
     }
 });
