@@ -513,11 +513,8 @@ document.addEventListener('keydown', (event) => {
 // Game configuration
 const config = {
     type: Phaser.AUTO,
-    scale: {
-        mode: Phaser.Scale.WIDTH_CONTROLS_HEIGHT,
-        // width: 800,
-        // height: 600,
-    },
+    width: 800,
+    height: 600,
     parent: 'container',
     transparency: true,
     scene: LevelOne,
