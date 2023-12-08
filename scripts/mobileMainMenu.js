@@ -10,26 +10,43 @@ class MainMenu extends Phaser.Scene {
     }
 
     create() {
-        const { width, height } = this.scale.gameSize;
-
         // Menu Background
         const background = this.add.image(0, 0, 'menu-background');
         background.setOrigin(0, 0);
+        background.setScale(this.cameras.main.width / background.width, this.cameras.main.height / background.height);
 
-        this.add.image(width * 0.1, height * 0.1, 'planet');
-        this.add.image(width * 0.3, height * 0.3, 'player');
+        this.add.image(20, 20, 'planet').setScale(0.5);
+        this.add.image(100, 100, 'player').setScale(0.5);
 
         // Menu Text
-        const screenCenterX = width / 2;
-        const screenCenterY = height / 2;
+        const screenCenterX = this.cameras.main.width / 2;
+        const screenCenterY = this.cameras.main.height / 2;
 
         // Title
-        this.add.text(screenCenterX - 40, screenCenterY - height * 0.4, 'Space', { font: '80px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
-        this.add.text(screenCenterX + 100, screenCenterY - height * 0.32, 'Blasters', { font: '80px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
+        this.add.text(screenCenterX, screenCenterY - this.cameras.main.height * 0.4, 'Space', {
+            font: `${Math.floor(this.cameras.main.height * 0.1)}px Orbitron`,
+            stroke: 'black',
+            strokeThickness: 2
+        }).setOrigin(0.5);
+
+        this.add.text(screenCenterX, screenCenterY - this.cameras.main.height * 0.3, 'Blasters', {
+            font: `${Math.floor(this.cameras.main.height * 0.1)}px Orbitron`,
+            stroke: 'black',
+            strokeThickness: 2
+        }).setOrigin(0.5);
 
         // Menu Options
-        const playGameText = this.add.text(screenCenterX, screenCenterY - 10, 'Play Game', { font: '35px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
-        const gameRulesText = this.add.text(screenCenterX, screenCenterY + 80, 'Game Rules', { font: '35px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
+        const playGameText = this.add.text(screenCenterX, screenCenterY - 10, 'Play Game', {
+            font: `${Math.floor(this.cameras.main.height * 0.035)}px Orbitron`,
+            stroke: 'black',
+            strokeThickness: 2
+        }).setOrigin(0.5);
+
+        const gameRulesText = this.add.text(screenCenterX, screenCenterY + 80, 'Game Rules', {
+            font: `${Math.floor(this.cameras.main.height * 0.035)}px Orbitron`,
+            stroke: 'black',
+            strokeThickness: 2
+        }).setOrigin(0.5);
 
         // Choose Option
         playGameText.setInteractive({ useHandCursor: true });
@@ -49,16 +66,17 @@ class MainMenu extends Phaser.Scene {
 // Game configuration
 const config = {
     type: Phaser.AUTO,
-    width: '100%', // Set width to 100% of the parent container
-    height: '100%', // Set height to 100% of the parent container
+    width: window.innerWidth,
+    height: window.innerHeight,
     parent: 'container',
+    transparency: true,
     scene: MainMenu,
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true,
-        },
-    },
+            debug: true
+        }
+    }
 };
 
 const game = new Phaser.Game(config);
