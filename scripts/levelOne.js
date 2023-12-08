@@ -514,7 +514,9 @@ document.addEventListener('keydown', (event) => {
 const config = {
     type: Phaser.AUTO,
     scale: {
-        mode: Phaser.Scale.FIT,
+        mode: Phaser.Scale.WIDTH_CONTROLS_HEIGHT,
+        // width: 800,
+        // height: 600,
     },
     parent: 'container',
     transparency: true,
@@ -522,10 +524,10 @@ const config = {
     physics: {
         default: 'arcade',
             arcade: {
-                debug: false,
+                debug: false
             }
     }
 };
 
-const game = new Phaser.Game(config); 
+const game = new Phaser.Game(config);
 
