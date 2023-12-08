@@ -139,9 +139,9 @@ class LevelOne extends Phaser.Scene {
             repeat: 5,
             setXY: {x: 320, y: 100, stepX: 75},
             createCallback: (enemy) => {
-                // set a delay at the beginning of the game before enemy starts to follow andd fire at ship
-                enemy.lastFired = this.time.now - Phaser.Math.Between(5000, 7000); 
-                enemy.beginfollowingShip = this.time.now + Phaser.Math.Between(5000, 7000); 
+                // set a delay at the beginning of the game before enemy starts to follow and fire at ship
+                enemy.lastFired = this.time.now - Phaser.Math.Between(5000, 8000); 
+                enemy.beginfollowingShip = this.time.now + Phaser.Math.Between(5000, 10000); 
             },
         });
 
@@ -153,7 +153,7 @@ class LevelOne extends Phaser.Scene {
             createCallback: (enemy) => {
                 // set a delay at the beginning of the game before enemy starts to follow and fire at ship
                 enemy.lastFired = this.time.now - Phaser.Math.Between(5000, 7000); 
-                enemy.beginfollowingShip = this.time.now + Phaser.Math.Between(5000, 7000);
+                enemy.beginfollowingShip = this.time.now + Phaser.Math.Between(4000, 8000);
             },
         });
 
@@ -335,18 +335,25 @@ class LevelOne extends Phaser.Scene {
 
     // function to handle collision between ship and enemy bullets
     enemyBulletShipCollision(ship, enemyBullet) {
-
         enemyBullet.destroy();
         this.shieldEmitter.setPosition(ship.x, ship.y);
         this.shieldEmitter.explode();
 
-        // reduce squares each time ship is hit by enemy bullet
-        if (this.protectionLevel > 0) {
+        // add hit variable to keep track of number of time ship has been hit by bullet
+        if (!this.hits) {
+            this.hits = 1;
+        } else {
+            this.hits++;
+        }
+
+        // for every two hits, reduce protection level by one
+        if (this.hits % 2 === 0 && this.protectionLevel > 0) {
             this.protectionLevel--;
             this.updateProtectionlevel();
+        }
 
-            // player loses if protection level is 0
-        } else if (this.protectionLevel === 0) {
+        // player loses if protection level is 0
+        if (this.protectionLevel === 0) {
             this.ship.setActive(false);
             this.ship.setVisible(false);
             this.explosionEmitter.setPosition(ship.x, ship.y);
@@ -354,13 +361,12 @@ class LevelOne extends Phaser.Scene {
 
             // display game over text
             this.gameOverText.setVisible(true);
-        
+
             // go to main menu
             this.time.delayedCall(3000, () => {
-                this.scene.start('MainMenu'); 
-            })
+                this.scene.start('MainMenu');
+            });
         }
-        
     }
 
     // function to handle collision between enemy ship and bullet as well as update score
@@ -396,7 +402,7 @@ class LevelOne extends Phaser.Scene {
                 this.physics.velocityFromRotation(angleToPlayer, 400, enemy.body.velocity);
 
                 // set up enemy to fire
-                if (!enemy.lastFired || this.time.now - enemy.lastFired > 1000) {
+                if (!enemy.lastFired || this.time.now - enemy.lastFired > 1500) {
                     const enemyBullet = this.enemyBullets.get();
                     if (enemyBullet) {
                         enemyBullet.fire(enemy);
@@ -507,8 +513,9 @@ document.addEventListener('keydown', (event) => {
 // Game configuration
 const config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    scale: {
+        mode: Phaser.Scale.FIT,
+    },
     parent: 'container',
     transparency: true,
     scene: LevelOne,
