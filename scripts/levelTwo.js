@@ -1,6 +1,3 @@
-// global variable for when game is paused outside of the class
-let gamePausedText;
-
 // phaser class for level one scene
 class LevelTwo extends Phaser.Scene {
 
@@ -11,10 +8,8 @@ class LevelTwo extends Phaser.Scene {
         // add variables
         this.ship;
         this.enemyShip
-        this.enemyShip2
         this.bullet;
         this.enemyBullet;
-        this.enemyBullet2;
         this.controls;
         this.score = 0;
         this.protectionLevel = 10;
@@ -24,6 +19,7 @@ class LevelTwo extends Phaser.Scene {
         this.redSquare = [];
         this.gameOver = false;
         this.escape;
+        this.playerAmmo = 20;
 
         // booster particle config
         this.particleConfig = {
@@ -78,14 +74,12 @@ class LevelTwo extends Phaser.Scene {
         // load ships
         this.load.image('ship', 'assets/Player/ship.png');
         this.load.image('enemy-ship', 'assets/Enemy/enemy-ship.png');
-        this.load.image('enemy-ship', 'assets/Enemy/enemy-ship2.png');
 
         // load objects/FX
         this.load.image('booster', 'assets/Player/booster.png');
         this.load.image('enemy-booster', 'assets/Enemy/enemy-booster.png');
         this.load.image('bullet', 'assets/Player/bullet.png');
         this.load.image('enemy-bullet', 'assets/Enemy/enemy-bullet.png');
-        this.load.image('enemy-bullet', 'assets/Enemy/enemy-bullet2.png');
         this.load.image('explosion', 'assets/FX/flash.png');
         this.load.image('circle', 'assets/Player/circle.png')
         this.load.image('red', 'assets/FX/squareRed.png');
@@ -144,7 +138,7 @@ class LevelTwo extends Phaser.Scene {
             setXY: {x: 320, y: 100, stepX: 75},
             createCallback: (enemy) => {
                 // set a delay at the beginning of the game before enemy starts to follow and fire at ship
-                enemy.lastFired = this.time.now - Phaser.Math.Between(5000, 8000); 
+                enemy.lastFired = this.time.now - Phaser.Math.Between(6000, 8000); 
                 enemy.beginfollowingShip = this.time.now + Phaser.Math.Between(5000, 10000); 
             },
         });
@@ -192,11 +186,18 @@ class LevelTwo extends Phaser.Scene {
         this.scoreText.setScrollFactor(0);
 
         // add level text
-        this.levelText = this.add.text(730,  30, 'Level 2', {font: '25px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
+        this.levelText = this.add.text(730,  30, 'Level 1', {font: '25px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
         this.levelText.setScrollFactor(0);
 
+        // add ammo display
+        this.dipplayAmmo = this.add.text(650,  560, 'Bullets: ' + this.playerAmmo, {font: '25px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
+        this.dipplayAmmo.setScrollFactor(0);
+
+        // control firing of bullets
+        this.fireBullet = true;
+
         // add level completed text and set to hidden (until level is complete)
-        this.gameWonText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2.5, 'Level Two Complete!', { font: '60px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
+        this.gameWonText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2.5, 'Level One Complete!', { font: '60px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
         this.gameWonText.setVisible(false).setScrollFactor(0);
 
         // // add paused text and set to hidden (until game is paused)
@@ -268,11 +269,24 @@ class LevelTwo extends Phaser.Scene {
            this.boosterEmitter.stop();
         }
     
-        // utilise bullets
-        if (this.controls.space.isDown) {
+        // utilise bullets if there are bullets remaining
+        if (this.controls.space.isDown && this.playerAmmo > 0 && this.fireBullet) {
+
             const bullet = this.bullets.get();
+
             if (bullet) {
                 bullet.fire(this.ship);
+                // reduced ammo
+                this.playerAmmo--;
+                // update ammo display text
+                this.dipplayAmmo.setText('Bullets: ' + this.playerAmmo);
+
+                this.fireBullet = false;
+                
+                // Add a delay to control the firing rate
+                this.time.delayedCall(300, () => {
+                    this.fireBullet = true;
+                });
             }
         } 
 
@@ -291,8 +305,6 @@ class LevelTwo extends Phaser.Scene {
         this.enemyRowTwo.children.iterate((enemy) => {
             // follow and fire at ship
             this.targetShip(enemy);
-
-           
         });
 
         // check if all enemy ships destroyed
@@ -301,7 +313,7 @@ class LevelTwo extends Phaser.Scene {
             this.gameWonText.setVisible(true);
             // move on to next level after a delay of 5 seconds
             this.time.delayedCall(5000, () => {
-                this.scene.start('levelTwo');
+                this.scene.start('levelThree');
             });
             
         }
@@ -442,8 +454,7 @@ class Bullet extends Phaser.Physics.Arcade.Image {
         this.setAngle(ship.body.rotation);
         this.setPosition(ship.x, ship.y);
         this.body.reset(ship.x, ship.y);
-        this.scene.physics.velocityFromRotation(ship.rotation, this.speed, this.body.velocity);
-        
+        this.scene.physics.velocityFromRotation(ship.rotation, this.speed, this.body.velocity); 
     }
 
     // handle bullet lifespan
@@ -482,8 +493,7 @@ class EnemyBullet extends Phaser.Physics.Arcade.Image {
         this.setAngle(enemyShip.body.rotation);
         this.setPosition(enemyShip.x, enemyShip.y);
         this.body.reset(enemyShip.x, enemyShip.y);
-        this.scene.physics.velocityFromRotation(enemyShip.rotation, this.speed, this.body.velocity);
-        
+        this.scene.physics.velocityFromRotation(enemyShip.rotation, this.speed, this.body.velocity); 
     }
 
     // handle bullet lifespan
@@ -499,6 +509,9 @@ class EnemyBullet extends Phaser.Physics.Arcade.Image {
     }
 
 }
+
+// variable for when game is paused 
+let gamePausedText;
 
 // pause/resume game
 document.addEventListener('keydown', (event) => {
