@@ -1,4 +1,4 @@
-class DifficultyMode extends Phaser.Scene {
+export default class DifficultyMode extends Phaser.Scene {
 
     constructor() {
 
@@ -39,7 +39,7 @@ class DifficultyMode extends Phaser.Scene {
         // Choose Option
         easyModeText.setInteractive({useHandCursor: true});
         easyModeText.on('pointerdown', () => {
-            this.scene.start('levelOne');
+            this.scene.start('LevelOne');
         });
 
         normalModeText.setInteractive({useHandCursor: true});
@@ -56,30 +56,5 @@ class DifficultyMode extends Phaser.Scene {
         returnText.on('pointerdown', () => {
             this.scene.start('MainMenu');
         });
-       
     }
-
-    update() {
-
-    }
-
 }
-
- 
-// Game configuration
-const config = {
-    type: Phaser.AUTO,
-    width: 800,
-    height: 600,
-    parent: 'container',
-    transparency: true,
-    scene: DifficultyMode,
-    physics: {
-        default: 'arcade',
-            arcade: {
-                debug: true
-            }
-    }
-};
-
-const game = new Phaser.Game(config);
