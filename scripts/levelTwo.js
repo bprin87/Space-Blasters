@@ -1,5 +1,5 @@
 // phaser class for level one scene
-class LevelTwo extends Phaser.Scene {
+export default class LevelTwo extends Phaser.Scene {
 
     constructor() {
 
@@ -151,7 +151,7 @@ class LevelTwo extends Phaser.Scene {
             createCallback: (enemy) => {
                 // set a delay at the beginning of the game before enemy starts to follow and fire at ship
                 enemy.lastFired = this.time.now - Phaser.Math.Between(5000, 7000); 
-                enemy.beginfollowingShip = this.time.now + Phaser.Math.Between(4000, 8000);
+                enemy.beginfollowingShip = this.time.now + Phaser.Math.Between(5000, 8000);
             },
         });
 
@@ -186,23 +186,23 @@ class LevelTwo extends Phaser.Scene {
         this.scoreText.setScrollFactor(0);
 
         // add level text
-        this.levelText = this.add.text(730,  30, 'Level 1', {font: '25px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
+        this.levelText = this.add.text(730,  30, 'Level 2', {font: '25px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
         this.levelText.setScrollFactor(0);
 
         // add ammo display
-        this.dipplayAmmo = this.add.text(650,  560, 'Bullets: ' + this.playerAmmo, {font: '25px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
-        this.dipplayAmmo.setScrollFactor(0);
+        this.displayAmmo = this.add.text(650,  560, 'Bullets: ' + this.playerAmmo, {font: '25px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
+        this.displayAmmo.setScrollFactor(0);
 
         // control firing of bullets
         this.fireBullet = true;
 
         // add level completed text and set to hidden (until level is complete)
-        this.gameWonText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2.5, 'Level One Complete!', { font: '60px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
+        this.gameWonText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2.5, 'Level Two Complete!', { font: '60px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
         this.gameWonText.setVisible(false).setScrollFactor(0);
 
         // // add paused text and set to hidden (until game is paused)
-        gamePausedText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2, 'Game Paused', { font: '50px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
-        gamePausedText.setVisible(false).setScrollFactor(0);
+        this.gamePausedText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2, 'Game Paused', { font: '50px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
+        this.gamePausedText.setVisible(false).setScrollFactor(0);
 
          //add game over text and set to hidden (until game is over)
         this.gameOverText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2.5, 'Game Over!', { font: '60px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
@@ -214,6 +214,7 @@ class LevelTwo extends Phaser.Scene {
         // controls
         this.controls = this.input.keyboard.createCursorKeys();
         this.escape = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+        this.pause = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
 
         // set collision detection between ships and bullets
         this.physics.add.collider(this.ship, this.enemyRowOne);
@@ -244,12 +245,14 @@ class LevelTwo extends Phaser.Scene {
             on: false 
         });
 
-        // controls
-        this.controls = this.input.keyboard.createCursorKeys();
-
     }
 
     update() {
+
+        // Pause Game
+        if (Phaser.Input.Keyboard.JustDown(this.pause)) {
+            this.pauseGame();
+        }
 
         // apply the control keys
         if (this.controls.left.isDown) {
@@ -279,7 +282,7 @@ class LevelTwo extends Phaser.Scene {
                 // reduced ammo
                 this.playerAmmo--;
                 // update ammo display text
-                this.dipplayAmmo.setText('Bullets: ' + this.playerAmmo);
+                this.displayAmmo.setText('Bullets: ' + this.playerAmmo);
 
                 this.fireBullet = false;
                 
@@ -313,7 +316,7 @@ class LevelTwo extends Phaser.Scene {
             this.gameWonText.setVisible(true);
             // move on to next level after a delay of 5 seconds
             this.time.delayedCall(5000, () => {
-                this.scene.start('levelThree');
+                this.scene.start('MainMenu');
             });
             
         }
@@ -430,6 +433,21 @@ class LevelTwo extends Phaser.Scene {
         } 
     }
 
+    // function to pause/resume game
+    pauseGame() {
+
+        // toggle pause state
+        this.isPaused = !this.isPaused;
+        // display paused text when paused
+        this.gamePausedText.setVisible(this.isPaused);
+
+        if (this.isPaused) {
+            this.physics.pause();
+        } else {
+            this.physics.resume();
+        }
+    }
+
 }
 
 // ship bullet class
@@ -507,40 +525,4 @@ class EnemyBullet extends Phaser.Physics.Arcade.Image {
             this.body.stop();
         }
     }
-
 }
-
-// variable for when game is paused 
-let gamePausedText;
-
-// pause/resume game
-document.addEventListener('keydown', (event) => {
-    // if the p key is pressed then pause the game and display paused text
-    if (event.key === 'p') {
-        game.scene.pause('LevelTwo');
-        gamePausedText.setVisible(true);
-    // otherwise if the r key is pressed then resume the game
-    } else if (event.key === 'r') {
-        game.scene.resume('LevelTwo');
-        gamePausedText.setVisible(false);
-    }
-});
-
-// Game configuration
-const config = {
-    type: Phaser.AUTO,
-    width: 800,
-    height: 600,
-    parent: 'container',
-    transparency: true,
-    scene: LevelTwo,
-    physics: {
-        default: 'arcade',
-            arcade: {
-                debug: false
-            }
-    }
-};
-
-const game = new Phaser.Game(config);
-
