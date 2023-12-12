@@ -1,4 +1,4 @@
-class MainMenu extends Phaser.Scene {
+export default class MainMenu extends Phaser.Scene {
 
     constructor() {
 
@@ -10,10 +10,10 @@ class MainMenu extends Phaser.Scene {
         this.load.image('menu-background', 'assets/background3.jpg');
         this.load.image('planet', 'assets/Planets/earth.png');
         this.load.image('player', 'assets/Player/ship.png');
-      
     }
 
     create() {    
+
         // Menu Background
         const background = this.add.image(0, 0, 'menu-background');
         background.setOrigin(0, 0);
@@ -36,37 +36,13 @@ class MainMenu extends Phaser.Scene {
         // Choose Option
         playGameText.setInteractive({useHandCursor: true});
         playGameText.on('pointerdown', () => {
-            this.scene.start('levelOne');
+            this.scene.start('DifficultyMode');
         });
 
         gameRulesText.setInteractive({useHandCursor: true});
         gameRulesText.on('pointerdown', () => {
             this.scene.start('GameRules');
-        });
-       
+        }); 
     }
-
-    update() {
-
-    }
-
 }
-
  
-// Game configuration
-const config = {
-    type: Phaser.AUTO,
-    width: 800,
-    height: 600,
-    parent: 'container',
-    transparency: true,
-    scene: MainMenu,
-    physics: {
-        default: 'arcade',
-            arcade: {
-                debug: true
-            }
-    }
-};
-
-const game = new Phaser.Game(config);
