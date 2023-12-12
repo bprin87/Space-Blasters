@@ -1,4 +1,4 @@
-class GameRules extends Phaser.Scene {
+export default class GameRules extends Phaser.Scene {
 
     constructor() {
 
@@ -10,7 +10,6 @@ class GameRules extends Phaser.Scene {
         this.load.image('menu-background', 'assets/background3.jpg');
         this.load.image('sun', 'assets/Planets/sun.png');
         this.load.image('purple', 'assets/Planets/planet09.png');
-        // this.load.sceneFile('MainMenu', 'scripts/mainMenu.js');
     }
 
     create() {
@@ -44,33 +43,9 @@ class GameRules extends Phaser.Scene {
         this.add.text(screenCenterX, screenCenterY + 55, '5. Each enemy ship you destroy will earn you one point', {font: '18px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
         this.add.text(screenCenterX, screenCenterY + 90, '6. Each time you are hit by the enemy you will lose one level of protection', {font: '18px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
         this.add.text(screenCenterX, screenCenterY + 125, '7. If you lose all your protection then you lose the game', {font: '18px Orbitron', stroke: 'black', strokeThickness: 2}).setOrigin(.5);
-        
     }
-
-    update() {
-
-    }
-
-
 }
 
-// Game configuration
-const config = {
-    type: Phaser.AUTO,
-    width: 800,
-    height: 600,
-    parent: 'container',
-    transparency: true,
-    scene: GameRules,
-    physics: {
-        default: 'arcade',
-            arcade: {
-                debug: true
-            }
-    }
-};
-
-const game = new Phaser.Game(config);
 
 
 
