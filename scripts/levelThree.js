@@ -1,5 +1,5 @@
 // phaser class for level one scene
-class LevelThree extends Phaser.Scene {
+export default class LevelThree extends Phaser.Scene {
 
     constructor() {
 
@@ -203,8 +203,8 @@ class LevelThree extends Phaser.Scene {
         this.gameWonText.setVisible(false).setScrollFactor(0);
 
         // // add paused text and set to hidden (until game is paused)
-        gamePausedText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2, 'Game Paused', { font: '50px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
-        gamePausedText.setVisible(false).setScrollFactor(0);
+        this.gamePausedText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2, 'Game Paused', { font: '50px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
+        this.gamePausedText.setVisible(false).setScrollFactor(0);
 
          //add game over text and set to hidden (until game is over)
         this.gameOverText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2.5, 'Game Over!', { font: '60px Orbitron', stroke: 'black', strokeThickness: 2 }).setOrigin(0.5);
@@ -216,6 +216,7 @@ class LevelThree extends Phaser.Scene {
         // controls
         this.controls = this.input.keyboard.createCursorKeys();
         this.escape = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+        this.pause = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
 
         // set collision detection between ships and bullets
         this.physics.add.collider(this.ship, this.enemyRowOne);
@@ -246,15 +247,16 @@ class LevelThree extends Phaser.Scene {
             on: false 
         });
 
-    
         this.createAsteroid();
-
-        // controls
-        this.controls = this.input.keyboard.createCursorKeys();
 
     }
 
     update() {
+
+        // Pause Game
+        if (Phaser.Input.Keyboard.JustDown(this.pause)) {
+            this.pauseGame();
+        }
 
         // apply the control keys
         if (this.controls.left.isDown) {
@@ -319,7 +321,7 @@ class LevelThree extends Phaser.Scene {
             this.gameWonText.setVisible(true);
             // move on to next level after a delay of 5 seconds
             this.time.delayedCall(5000, () => {
-                this.scene.start('LevelThree');
+                this.scene.start('MainMenu');
             });
         }
 
@@ -463,6 +465,21 @@ class LevelThree extends Phaser.Scene {
         this.protectionLevel--;
         this.updateProtectionlevel();
     }
+
+    // function to pause/resume game
+    pauseGame() {
+
+        // toggle pause state
+        this.isPaused = !this.isPaused;
+        // display paused text when paused
+        this.gamePausedText.setVisible(this.isPaused);
+
+        if (this.isPaused) {
+            this.physics.pause();
+        } else {
+            this.physics.resume();
+        }
+    }
 }
 
 // ship bullet class
@@ -540,40 +557,4 @@ class EnemyBullet extends Phaser.Physics.Arcade.Image {
             this.body.stop();
         }
     }
-
 }
-
-// variable for when game is paused 
-let gamePausedText;
-
-// pause/resume game
-document.addEventListener('keydown', (event) => {
-    // if the p key is pressed then pause the game and display paused text
-    if (event.key === 'p') {
-        game.scene.pause('LevelThree');
-        gamePausedText.setVisible(true);
-    // otherwise if the r key is pressed then resume the game
-    } else if (event.key === 'r') {
-        game.scene.resume('LevelThree');
-        gamePausedText.setVisible(false);
-    }
-});
-
-// Game configuration
-const config = {
-    type: Phaser.AUTO,
-    width: 800,
-    height: 600,
-    parent: 'container',
-    transparency: true,
-    scene: LevelThree,
-    physics: {
-        default: 'arcade',
-            arcade: {
-                debug: false
-            }
-    }
-};
-
-const game = new Phaser.Game(config);
-
