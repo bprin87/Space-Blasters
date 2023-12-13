@@ -21,6 +21,7 @@ export default class LevelThree extends Phaser.Scene {
         this.escape;
         this.playerAmmo = 20;
         this.asteroids = [];
+        this.levelTime = 0;
 
         // booster particle config
         this.particleConfig = {
@@ -92,6 +93,9 @@ export default class LevelThree extends Phaser.Scene {
 
     create() {
 
+        // reset the level time so that there is a delay before the next level
+        this.levelTime = 0;
+
         // add background
         const space = this.add.image(0, 0, 'game-background').setScrollFactor(0);
         space.setOrigin(0, 0); 
@@ -152,8 +156,8 @@ export default class LevelThree extends Phaser.Scene {
             setXY: {x: 300, y: -50, stepX: 75},
             createCallback: (enemy) => {
                 // set a delay at the beginning of the game before enemy starts to follow and fire at ship
-                enemy.lastFired = this.time.now - Phaser.Math.Between(5000, 7000); 
-                enemy.beginfollowingShip = this.time.now + Phaser.Math.Between(4000, 8000);
+                enemy.lastFired = Phaser.Math.Between(5000, 7000); 
+                enemy.beginfollowingShip = Phaser.Math.Between(4000, 8000);
             },
         });
 
@@ -251,7 +255,10 @@ export default class LevelThree extends Phaser.Scene {
 
     }
 
-    update() {
+    update(time, delta) {
+
+        // update the level time
+        this.levelTime += delta;
 
         // Pause Game
         if (Phaser.Input.Keyboard.JustDown(this.pause)) {
@@ -414,7 +421,7 @@ export default class LevelThree extends Phaser.Scene {
         // check ship still alive
         if (this.ship && this.ship.active) {
             // set enemy ships to follow player ship
-            if (this.time.now >= enemy.beginfollowingShip) {
+            if (this.levelTime >= enemy.beginfollowingShip) {
 
                 // adjust angle for pointing at ship
                 const angleToPlayer = Phaser.Math.Angle.
