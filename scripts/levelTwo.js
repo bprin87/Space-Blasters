@@ -20,6 +20,7 @@ export default class LevelTwo extends Phaser.Scene {
         this.gameOver = false;
         this.escape;
         this.playerAmmo = 20;
+        this.levelTime = 0;
 
         // booster particle config
         this.particleConfig = {
@@ -90,6 +91,10 @@ export default class LevelTwo extends Phaser.Scene {
 
     create() {
 
+        // reset the level time so that there is a delay before the next level
+        // this.levelTime = this.time.now;
+        this.levelTime = 0;
+
         // add background
         const space = this.add.image(0, 0, 'game-background').setScrollFactor(0);
         space.setOrigin(0, 0); 
@@ -138,8 +143,8 @@ export default class LevelTwo extends Phaser.Scene {
             setXY: {x: 320, y: 100, stepX: 75},
             createCallback: (enemy) => {
                 // set a delay at the beginning of the game before enemy starts to follow and fire at ship
-                enemy.lastFired = this.time.now - Phaser.Math.Between(6000, 8000); 
-                enemy.beginfollowingShip = this.time.now + Phaser.Math.Between(5000, 10000); 
+                enemy.lastFired = Phaser.Math.Between(6000, 8000); 
+                enemy.beginfollowingShip = Phaser.Math.Between(5000, 10000); 
             },
         });
 
@@ -150,8 +155,8 @@ export default class LevelTwo extends Phaser.Scene {
             setXY: {x: 300, y: 50, stepX: 75},
             createCallback: (enemy) => {
                 // set a delay at the beginning of the game before enemy starts to follow and fire at ship
-                enemy.lastFired = this.time.now - Phaser.Math.Between(5000, 7000); 
-                enemy.beginfollowingShip = this.time.now + Phaser.Math.Between(5000, 8000);
+                enemy.lastFired = Phaser.Math.Between(5000, 7000); 
+                enemy.beginfollowingShip = Phaser.Math.Between(5000, 8000);
             },
         });
 
@@ -247,7 +252,10 @@ export default class LevelTwo extends Phaser.Scene {
 
     }
 
-    update() {
+    update(time, delta) {
+
+        // update the level time
+        this.levelTime += delta;
 
         // Pause Game
         if (Phaser.Input.Keyboard.JustDown(this.pause)) {
@@ -316,7 +324,7 @@ export default class LevelTwo extends Phaser.Scene {
             this.gameWonText.setVisible(true);
             // move on to next level after a delay of 5 seconds
             this.time.delayedCall(5000, () => {
-                this.scene.start('MainMenu');
+                this.scene.start('LevelThree');
             });
             
         }
@@ -410,7 +418,7 @@ export default class LevelTwo extends Phaser.Scene {
         // check ship still alive
         if (this.ship && this.ship.active) {
             // set enemy ships to follow player ship
-            if (this.time.now >= enemy.beginfollowingShip) {
+            if (this.levelTime >= enemy.beginfollowingShip) {
 
                 // adjust angle for pointing at ship
                 const angleToPlayer = Phaser.Math.Angle.
