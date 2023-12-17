@@ -20,6 +20,7 @@ export default class LevelOne extends Phaser.Scene {
         this.gameOver = false;
         this.escape;
         this.levelTime = 0;
+        this.levelComplete = false;
 
         // booster particle config
         this.particleConfig = {
@@ -243,6 +244,11 @@ export default class LevelOne extends Phaser.Scene {
 
     update(time, delta) {
 
+        // nothing else happens in the game if game over or level complete
+        if (this.gameOver || this.levelComplete) {
+            return;
+        }
+
         // update the level time
         this.levelTime += delta;
 
@@ -286,25 +292,23 @@ export default class LevelOne extends Phaser.Scene {
         this.enemyRowOne.children.iterate((enemy) => {
             // follow and fire at ship
             this.targetShip(enemy);
-            
         });
 
         this.enemyRowTwo.children.iterate((enemy) => {
             // follow and fire at ship
             this.targetShip(enemy);
-
-           
         });
 
         // check if all enemy ships destroyed
-        if (this.score >= 'enemy-ship'.length + 2) {
+        if (this.score >= 'enemy-ship'.length + 2 && !this.gameOver) {
+
+            this.levelComplete = true;
             // display game won text
             this.gameWonText.setVisible(true);
             // move on to next level after a delay of 5 seconds
             this.time.delayedCall(5000, () => {
                 this.scene.start('LevelTwo');
             });
-            
         }
 
         this.updateProtectionlevel();
@@ -335,7 +339,6 @@ export default class LevelOne extends Phaser.Scene {
         for (let i = 0; i < 4 && i < this.protectionLevel; i++) {
             this.redSquare[i].setVisible(true);
         }
-
     }
 
     // function to handle collision between ship and enemy bullets
@@ -358,7 +361,9 @@ export default class LevelOne extends Phaser.Scene {
         }
 
         // player loses if protection level is 0
-        if (this.protectionLevel === 0) {
+        if (this.protectionLevel === 0 && !this.levelComplete) {
+
+            this.gameOver = true;
             this.ship.setActive(false);
             this.ship.setVisible(false);
             this.explosionEmitter.setPosition(ship.x, ship.y);
@@ -366,7 +371,7 @@ export default class LevelOne extends Phaser.Scene {
 
             // display game over text
             this.gameOverText.setVisible(true);
-
+            
             // go to main menu
             this.time.delayedCall(3000, () => {
                 this.scene.start('MainMenu');
@@ -433,7 +438,6 @@ export default class LevelOne extends Phaser.Scene {
             this.physics.resume();
         }
     }
-
     
 }
 
@@ -459,7 +463,16 @@ class Bullet extends Phaser.Physics.Arcade.Image {
         this.setAngle(ship.body.rotation);
         this.setPosition(ship.x, ship.y);
         this.body.reset(ship.x, ship.y);
+
+        // get ship's velocity
+        const shipVelocity = ship.body.velocity;
+
+        // calculate bullet velocity based on rotation and speed of ship
         this.scene.physics.velocityFromRotation(ship.rotation, this.speed, this.body.velocity); 
+
+        // adjust bullet velocity by adding ship velocity
+        this.body.velocity.x += shipVelocity.x;
+        this.body.velocity.y += shipVelocity.y;
     }
 
     // handle bullet lifespan
@@ -475,6 +488,7 @@ class Bullet extends Phaser.Physics.Arcade.Image {
     }
 
 }
+
 
 // enemy bullet class
 class EnemyBullet extends Phaser.Physics.Arcade.Image {
