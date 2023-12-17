@@ -97,6 +97,9 @@ export default class LevelThree extends Phaser.Scene {
         // reset the level time so that there is a delay before the next level
         this.levelTime = 0;
 
+        // reset scene if player exits or completes level
+        this.resetScene();
+
         // add background
         const space = this.add.image(0, 0, 'game-background').setScrollFactor(0);
         space.setOrigin(0, 0); 
@@ -496,6 +499,16 @@ export default class LevelThree extends Phaser.Scene {
         } else {
             this.physics.resume();
         }
+    }
+
+    // function to reset variables when resetScene is called
+    resetScene() {
+        this.score = 0;
+        this.protectionLevel = 10;
+        this.gameOver = false;
+        this.levelComplete = false;
+        this.levelTime = 0;
+        this.playerAmmo = 20;
     }
 }
 
